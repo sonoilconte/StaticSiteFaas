@@ -1,3 +1,6 @@
+# Azure functions local settings
+local.settings.json
+
 bin
 obj
 csx

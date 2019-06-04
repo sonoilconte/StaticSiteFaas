@@ -1,16 +1,37 @@
-module.exports = async function (context, req) {
-    context.log('JavaScript HTTP trigger function processed a request.');
+const nodeMailer = require('nodemailer');
+const transporter = nodeMailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASSWORD
+  }
+});
 
-    if (req.query.name || (req.body && req.body.name)) {
-        context.res = {
-            // status: 200, /* Defaults to 200 */
-            body: "Hello " + (req.query.name || req.body.name)
-        };
+const options = {
+  from: `StaticSiteFaas <${process.env.GMAIL_USER}>`,
+  to: process.env.GMAIL_USER,
+  subject: 'yo',
+  html: 'yo it is a test'
+};
+
+module.exports = async function (context, req) {
+
+  transporter.sendMail(options, function(err, info) {
+    if (err) {
+      console.log(err);
+      context.res = {
+        status: 500,
+        body: err
+      };
+      context.done();
+    } else {
+      console.log(info);
+      context.res = {
+        status: 200,
+        body: info
+      };
+      context.done();
     }
-    else {
-        context.res = {
-            status: 400,
-            body: "Please pass a name on the query string or in the request body"
-        };
-    }
+  });
+
 };
