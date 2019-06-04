@@ -7,31 +7,30 @@ const transporter = nodeMailer.createTransport({
   }
 });
 
-const options = {
-  from: `StaticSiteFaas <${process.env.GMAIL_USER}>`,
-  to: process.env.GMAIL_USER,
-  subject: 'yo',
-  html: 'yo it is a test'
-};
-
 module.exports = async function (context, req) {
-
-  transporter.sendMail(options, function(err, info) {
-    if (err) {
-      console.log(err);
+  if (req.body && req.body.email && req.body.message) {
+    const options = {
+      from: `StaticSiteFaas <${process.env.GMAIL_USER}>`,
+      to: process.env.GMAIL_USER,
+      subject: req.body.subject,
+      html: `<h2>Message from ${req.body.email}.</h2><p>${req.body.message}</p>`
+    };
+    try {
+      let info = await transporter.sendMail(options);
+      context.res = {
+        body: 'sent email'
+      };
+    } catch (err) {
+      context.log('error', err);
       context.res = {
         status: 500,
-        body: err
+        body: 'email could not be sent'
       };
-      context.done();
-    } else {
-      console.log(info);
-      context.res = {
-        status: 200,
-        body: info
-      };
-      context.done();
     }
-  });
-
+  } else {
+    context.res = {
+      status: 422,
+      body: 'Unprocessable Entity'
+    };
+  }
 };
